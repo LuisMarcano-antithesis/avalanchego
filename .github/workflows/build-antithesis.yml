@@ -1,0 +1,28 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - master  # Change this to your main branch name
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: /Dockerfile.antithesis  # Specify the path to your Dockerfile
+        platforms: linux/amd64
+        push: true
+        tags: |
+          us-central1-docker.pkg.dev/molten-verve-216720/avalanche-repository/avalanche-node:github-action
+          us-central1-docker.pkg.dev/molten-verve-216720/avalanche-repository/avalanche-node:${{ github.sha }}
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_AVALANCHE_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_AVALANCHE_PASSWORD }}
