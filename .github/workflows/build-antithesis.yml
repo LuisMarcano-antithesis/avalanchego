@@ -17,9 +17,6 @@ jobs:
       uses: docker/login-action@v3
       env: 
         REGISTRY: us-central1-docker.pkg.dev
-        REPOSITORY: molten-verve-216720/avalanche-repository
-        IMAGE_TAG: lm-testing
-        IMAGE_NAME: avalanche-node
       with:
         registry: ${{ env.REGISTRY }}
         username: _json_key
@@ -27,6 +24,11 @@ jobs:
     
     - name: Build, tag, and push the avalanche image to Antithesis registry
       id: build-avalanche-image
+      env: 
+        REGISTRY: us-central1-docker.pkg.dev
+        REPOSITORY: molten-verve-216720/avalanche-repository
+        IMAGE_TAG: lm-testing
+        IMAGE_NAME: avalanche-node
       run: |
         docker build --build-arg="RACE_FLAG=-r" -t $REGISTRY/$REPOSITORY/$IMAGE_NAME:$IMAGE_TAG -f ./Dockerfile.antithesis .
 
