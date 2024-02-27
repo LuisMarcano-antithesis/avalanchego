@@ -36,10 +36,10 @@ jobs:
         echo "name=image::$REGISTRY/$REPOSITORY/$SUT_NAME:$SUT_TAG" >> $GITHUB_OUTPUT
 
     - name: Build config
-        id: build-config-image
-        run: |
-          docker build --build-arg="RACE_FLAG=-r" -t $REGISTRY/$REPOSITORY/$CONFIG_NAME:$CONFIG_TAG -f ./Dockerfile.config.antithesis .
-          echo "name=image::$REGISTRY/$REPOSITORY/$CONFIG_NAME:$CONFIG_TAG" >> $GITHUB_OUTPUT
+      id: build-config-image
+      run: |
+        docker build --build-arg="RACE_FLAG=-r" -t $REGISTRY/$REPOSITORY/$CONFIG_NAME:$CONFIG_TAG -f ./Dockerfile.config.antithesis .
+        echo "name=image::$REGISTRY/$REPOSITORY/$CONFIG_NAME:$CONFIG_TAG" >> $GITHUB_OUTPUT
 
     # placeholder: build workload
 
