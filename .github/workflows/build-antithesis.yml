@@ -33,5 +33,5 @@ jobs:
         docker build --build-arg="RACE_FLAG=-r" -t $REGISTRY/$REPOSITORY/$IMAGE_NAME:$IMAGE_TAG -f ./Dockerfile.antithesis .
 
         echo "Pushing image to Antithesis..."
-        docker push $REGISTRY/$REPOSITORY --all-tags
-        echo "name=image::$REGISTRY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        docker push $REGISTRY/$REPOSITORY/$IMAGE_NAME --all-tags
+        echo "name=image::$REGISTRY/$REPOSITORY/$IMAGE_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
