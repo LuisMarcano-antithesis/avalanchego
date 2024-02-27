@@ -1,111 +1,59 @@
-name: Continous Integration (Go Services)
+name: Build and Push Docker Image
 
-on: 
-   workflow_dispatch:
-   schedule:
-     - cron: "5 1 * * *"
+on:
+  push:
+    branches:
+      - master  # Change this to your main branch name
+
+env: 
+  REGISTRY: us-central1-docker.pkg.dev
+  REPOSITORY: molten-verve-216720/avalanche-repository
+  SUT_TAG: latest
+  SUT_NAME: avalanche-node
+  CONFIG_IMAGE: config
+  CONFIG_TAG: latest
+
 
 jobs:
   antithesis:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      packages: write
-
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to Docker Hub
+    - name: Login to GAR
       uses: docker/login-action@v3
       with:
-        # These secrets would need to be populated in your repo and named
-        # this way if you want to copy-and-paste this configuration.
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PAT }}
+        registry: ${{ env.REGISTRY }}
+        username: _json_key
+        password: ${{ secrets.ANTITHESIS_GAR_JSON_KEY }}
+    
+    - name: Build avalanche node
+      id: build-avalanche-image
+      run: |
+        docker build --build-arg="RACE_FLAG=-r" -t $REGISTRY/$REPOSITORY/$SUT_NAME:$SUT_TAG -f ./Dockerfile.node.antithesis .
+        echo "name=image::$REGISTRY/$REPOSITORY/$SUT_NAME:$SUT_TAG" >> $GITHUB_OUTPUT
 
-    # Extract the metadata (tags) for all the containers
-    - name: Extract metadata (tags) for Docker workload
-      id: meta-workload
-      uses: docker/metadata-action@v5
-      with:
-        images: antithesishq/demo-workload
-        tags: |
-          type=sha
-          antithesis
-    - name: Extract metadata (tags) for Docker Go config
-      id: meta-go-config
-      uses: docker/metadata-action@v5
-      with:
-        images: antithesishq/demo-go-config
-        tags: |
-          type=sha
-          antithesis
-    - name: Extract metadata (tags) for Docker Go control
-      id: meta-go-control
-      uses: docker/metadata-action@v5
-      with:
-        images: antithesishq/demo-go-control
-        tags: |
-          type=sha
-          antithesis
-    - name: Extract metadata (tags) for Docker Go vault
-      id: meta-go-vault
-      uses: docker/metadata-action@v5
-      with:
-        images: antithesishq/demo-go-vault
-        tags: |
-          type=sha
-          antithesis
+    - name: Build config
+        id: build-config-image
+        run: |
+          docker build --build-arg="RACE_FLAG=-r" -t $REGISTRY/$REPOSITORY/$CONFIG_NAME:$CONFIG_TAG -f ./Dockerfile.config.antithesis .
+          echo "name=image::$REGISTRY/$REPOSITORY/$CONFIG_NAME:$CONFIG_TAG" >> $GITHUB_OUTPUT
 
-    # Now build and push each of the containers.
-    - name: Build and push workload
-      id: build-push-go-workload
-      uses: docker/build-push-action@v5
-      with:
-        context: ./workload
-        file: ./workload/Dockerfile.workload
-        push: true
-        tags: ${{ steps.meta-workload.outputs.tags }}
-        labels: ${{ steps.meta-workload.outputs.labels }}
-    - name: Build and push Go config
-      id: build-push-go-config
-      uses: docker/build-push-action@v5
-      with:
-        context: ./go
-        file: ./go/Dockerfile.config
-        push: true
-        tags: ${{ steps.meta-go-config.outputs.tags }}
-        labels: ${{ steps.meta-go-config.outputs.labels }}
-    - name: Build and push Go control
-      id: build-push-go-control
-      uses: docker/build-push-action@v5
-      with:
-        context: ./go
-        file: ./go/Dockerfile.control
-        push: true
-        tags: ${{ steps.meta-go-control.outputs.tags }}
-        labels: ${{ steps.meta-go-control.outputs.labels }}
-    - name: Build and push Go vault
-      id: build-push-go-vault
-      uses: docker/build-push-action@v5
-      with:
-        context: ./go
-        file: ./go/Dockerfile.vault
-        push: true
-        tags: ${{ steps.meta-go-vault.outputs.tags }}
-        labels: ${{ steps.meta-go-vault.outputs.labels }}
+    # placeholder: build workload
+
+    - name: Publish images
+      run: |
+        docker push ${REGISTRY}/${REPOSITORY}/${SUT_IMAGE}:${SUT_TAG}
+        docker push ${REGISTRY}/${REPOSITORY}/${CONFIG_IMAGE}:${CONFIG_TAG}
 
     # Run Antithesis Tests
     - name: Run Antithesis Tests
       uses: antithesishq/antithesis-trigger-action@main
       with:
-        notebook_name: demo_go
-        tenant: demo
+        notebook_name: avalanche__smoke-baseline__latest
+        tenant: avalanche
         username: ${{ secrets.ANTITHESIS_USERNAME }}
         password: ${{ secrets.ANTITHESIS_PASSWORD }}
         github_token: ${{ secrets.GH_PAT }}
-        images: demo-go-config@${{ steps.build-push-go-config.outputs.digest }};demo-workload@${{ steps.build-push-go-workload.outputs.digest }};demo-go-control@${{ steps.build-push-go-control.outputs.digest }};demo-go-vault@${{ steps.build-push-go-vault.outputs.digest }};
