@@ -10,7 +10,7 @@ env:
   REPOSITORY: molten-verve-216720/avalanche-repository
   SUT_TAG: latest
   SUT_NAME: avalanche-node
-  CONFIG_IMAGE: config
+  CONFIG_NAME: config
   CONFIG_TAG: latest
 
 
