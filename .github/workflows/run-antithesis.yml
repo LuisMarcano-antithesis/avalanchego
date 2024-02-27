@@ -45,8 +45,8 @@ jobs:
 
     - name: Publish images
       run: |
-        docker push ${REGISTRY}/${REPOSITORY}/${SUT_IMAGE}:${SUT_TAG}
-        docker push ${REGISTRY}/${REPOSITORY}/${CONFIG_IMAGE}:${CONFIG_TAG}
+        docker push ${REGISTRY}/${REPOSITORY}/${SUT_NAME}:${SUT_TAG}
+        docker push ${REGISTRY}/${REPOSITORY}/${CONFIG_NAME}:${CONFIG_TAG}
 
     # Run Antithesis Tests
     - name: Run Antithesis Tests
